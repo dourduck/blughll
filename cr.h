@@ -8,24 +8,37 @@
 
 #define MAX_COMMANDS 256
 
+/*
+ * Increment/decrement character status type by some amount
+ * Need to read character status and update visuals
+ * Take input and update character status
+ * Update character status per game tick
+ */
+
 typedef enum {
-  CMD_ENTITY_DESTROY,
-  CMD_SCENE_LOAD,
+  CMD_WATER_UPDATE,
+  CMD_RADS_UPDATE,
+  CMD_BOREDOM_UPDATE,
 } CmdKind;
 
 typedef struct {
-  int entityID;
-} Command_EntityDestroy;
+  int amount;
+} Cmd_UpdateWater;
 
 typedef struct {
-  int sceneID;
-} Command_SceneLoad;
+  int amount;
+} Cmd_UpdateRads;
+
+typedef struct {
+  int amount;
+} Cmd_UpdateBoredom;
 
 typedef struct {
   CmdKind kind;
   union {
-    Command_EntityDestroy entityDestroy;
-    Command_SceneLoad sceneLoad;
+    Cmd_UpdateWater updateWater;
+    Cmd_UpdateRads updateRads;
+    Cmd_UpdateBoredom updateBoredom;
   } data;
 } Command;
 

@@ -11,7 +11,7 @@ void Draw_DebugConsole(Input *input) {
   int x = (input->mouseWorldPosition.x);
   int y = (input->mouseWorldPosition.y);
 
-  DrawText(TextFormat("Mouse World Position Quantized: (%d, %d)", x, y), 10, 10,
+  DrawText(TextFormat("Mouse World Position: (%d, %d)", x, y), 10, 10,
            24, RAYWHITE);
 }
 /* ^^^ DEBUG CONSLE ^^^ */

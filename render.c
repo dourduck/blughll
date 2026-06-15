@@ -1,124 +1,50 @@
 #include "render.h"
 #include "game.h"
 #include "raylib.h"
+#include <stdio.h>
 
 /* vvv DEBUG CONSLE vvv */
 void Draw_DebugConsole(Input *input) {
   Rectangle r = {.x = 0, .y = 0, .width = GetRenderWidth(), .height = 300};
   DrawRectangleRec(r, Fade(BLACK, 0.6));
 
-  int x = (input->mouseWorldPositionQuantized.x);
-  int y = (input->mouseWorldPositionQuantized.y);
+  int x = (input->mouseWorldPosition.x);
+  int y = (input->mouseWorldPosition.y);
 
   DrawText(TextFormat("Mouse World Position Quantized: (%d, %d)", x, y), 10, 10,
            24, RAYWHITE);
 }
 /* ^^^ DEBUG CONSLE ^^^ */
 
-void RenderUpdate(World *world, Input *input, Camera2D camera) {
+void RenderUpdate(GameCtx *gameContext, Input *input, Camera2D camera) {
   BeginDrawing();
   ClearBackground(DARKGRAY);
+
   BeginMode2D(camera);
 
-  for (int i = 1; i <= world->nextID; i++) {
-    // TraitFlag flag = TRAITS_PUCK | TRAITS_POSITIONABLE;
+  int fontSize = 80;
+  int text_x = -camera.offset.x + (int)(fontSize * 0.2);
+  int text_y = -camera.offset.y;
 
-    // if (world->active[i] && WorldEntity_HasTrait(world, i, flag)) {
-      // Puck puck = world->puck[i];
+  char buffer_text[32];
+  snprintf(buffer_text, sizeof(buffer_text), "WATER: %d",
+                             gameContext->water);
+  DrawText(buffer_text, text_x, text_y, fontSize, SKYBLUE);
+  text_y += (int)(fontSize * 1.5);
 
-      // float x = world->x[i];
-      // float y = world->y[i];
+  snprintf(buffer_text, sizeof(buffer_text), "RADS: %d", gameContext->rads);
+  DrawText(buffer_text, text_x, text_y, fontSize, LIME);
+  text_y += (int)(fontSize * 1.5);
 
-      // if (puck == PUCK_BLUE) {
-      //   DrawCircle(x, y, puckRadius, SKYBLUE);
-      // } else if (puck == PUCK_RED) {
-      //   DrawCircle(x, y, puckRadius, RED);
-      // } else {
-      //   DrawCircle(x, y, puckRadius, MAGENTA);
-      // }
-    // }
-  }
-
-  // for (int i = 1; i <= world->nextID; i++) {
-  //   TraitFlag flag = TRAITS_CELL | TRAITS_POSITIONABLE;
-  //
-  //   if (world->active[i] && WorldEntity_HasTrait(world, i, flag)) {
-  //     float x = world->x[i];
-  //     float y = world->y[i];
-  //     Rectangle r = {.x = x, .y = y, .width = cellSize, .height = cellSize};
-  //     DrawRectangleLinesEx(r, lineWidth, LIGHTGRAY);
-  //   }
-  // }
-  //
-  // int x = (input->mouseWorldPositionQuantized.x);
-  // int y = (input->mouseWorldPositionQuantized.y);
-  
-  // if (world->console) {
-  //   for (int i = 0; i < GAME_COLUMN * GAME_ROW; i++) {
-  //     int xx = ((i % GAME_COLUMN) * cellSize) + cellSize / 2;
-  //     int yy = ((i / GAME_COLUMN) * cellSize) + cellSize / 2;
-  //     Puck puck = world->grid[i];
-  //     Color color = puck == PUCK_BLUE  ? DARKBLUE
-  //                   : puck == PUCK_NIL ? LIGHTGRAY
-  //                                      : MAROON;
-  //     DrawCircle(xx, yy, 8, color);
-  //   }
-  //
-  //   if (x >= 0 && x < (GAME_COLUMN * cellSize) && y >= 0 &&
-  //       y < (GAME_ROW * cellSize)) {
-  //     DrawCircle(x + (cellSize / 2), y + (cellSize / 2), 8, MAGENTA);
-  //   }
-  // }
+  snprintf(buffer_text, sizeof(buffer_text), "BOREDOM: %d",
+                               gameContext->boredom);
+  DrawText(buffer_text, text_x, text_y, fontSize, MAROON);
 
   EndMode2D();
 
-  if (world->console) {
+  if (gameContext->console) {
     Draw_DebugConsole(input);
   }
-
-  // if (world->winner == PUCK_BLUE) {
-  //   Rectangle r = {
-  //       .x = (int)((GetRenderWidth() / 2) -
-  //                  (MeasureText("Press R to restart...", 100) / 2) - 100),
-  //       .y = (((MeasureTextEx(
-  //                   GetFontDefault(),
-  //                   "BLUE WON!!!\nPress R to restart...\nPress Q to quit", 100,
-  //                   1.0))
-  //                  .y) /
-  //             2) -
-  //            75,
-  //       .width = MeasureText("Press R to restart...", 100) + 200,
-  //       .height =
-  //           MeasureTextEx(GetFontDefault(),
-  //                         "BLUE WON!!!\nPress R to restart...\nPress Q to quit",
-  //                         100, 1.0)
-  //               .y};
-  //   DrawRectangleRec(r, Fade(BLACK, 0.6));
-  //   DrawText("BLUE WON!!!", 500, 100, 100, SKYBLUE);
-  //   DrawText("Press R to restart...", 500, 200, 100, PURPLE);
-  //   DrawText("Press Q to quit", 500, 300, 50, DARKBLUE);
-  // } else if (world->winner == PUCK_RED) {
-  //   Rectangle r = {
-  //       .x = (int)((GetRenderWidth() / 2) -
-  //                  (MeasureText("Press R to restart...", 100) / 2) - 100),
-  //       .y = (((MeasureTextEx(
-  //                   GetFontDefault(),
-  //                   "BLUE WON!!!\nPress R to restart...\nPress Q to quit", 100,
-  //                   1.0))
-  //                  .y) /
-  //             2) -
-  //            75,
-  //       .width = MeasureText("Press R to restart...", 100) + 200,
-  //       .height =
-  //           MeasureTextEx(GetFontDefault(),
-  //                         "RED WON!!!\nPress R to restart...\nPress Q to quit",
-  //                         100, 1.0)
-  //               .y};
-  //   DrawRectangleRec(r, Fade(BLACK, 0.6));
-  //   DrawText("RED WON!!!", 500, 100, 100, PINK);
-  //   DrawText("Press R to restart...", 500, 200, 100, PURPLE);
-  //   DrawText("Press Q to quit", 500, 300, 50, DARKBLUE);
-  // }
 
   EndDrawing();
 }

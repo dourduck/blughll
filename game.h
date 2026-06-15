@@ -13,15 +13,10 @@ typedef struct {
 
 void GameRun(GameConfig *config);
 
-// #define GRAVITY 800
 #define MAX_ENTITIES 128
 #define NIL 0
 
-// #define GAME_COLUMN 7
-// #define GAME_ROW 7
-
 typedef int EntityID;
-
 typedef uint_fast8_t Traits;
 
 typedef float VelocityX;
@@ -40,8 +35,6 @@ typedef enum {
   TRAITS_CELL = (1 << 4),
 } TraitFlag;
 
-// typedef enum { PUCK_NIL = NIL, PUCK_BLUE = 1, PUCK_RED = 2 } Puck;
-
 typedef struct World World;
 
 struct World {
@@ -56,22 +49,15 @@ struct World {
 
   VelocityX dx[MAX_ENTITIES];
   VelocityY dy[MAX_ENTITIES];
-
-  // Text text[MAX_ENTITIES];
-  // Puck puck[MAX_ENTITIES];
-
-  bool console;
-  // bool puckFalling;
-
-  // int columnStopPosition[7];
-  //
-  // int puckColumnIndex[MAX_ENTITIES];
-  // int currentPuckIndex;
-  // Puck currentPuckTeam;
-  // Puck grid[GAME_COLUMN * GAME_ROW];
-
-  // Puck winner;
 };
+
+typedef struct {
+  int water;
+  int rads;
+  int boredom;
+  World* world;
+  bool console;
+} GameCtx;
 
 typedef struct {
   Vector2 mouseWorldPosition;
@@ -111,15 +97,10 @@ void WorldEntity_SetVelocity(World *world, EntityID entityID, float dx,
 
 void InputPull(Input *input, Camera2D camera);
 void InputApply(Input input);
-//
-// void GameUpdate(World *world, Input *input, int cellSize, float dt);
-//
-//
-// EntityID CreatePuck(World *world, Puck puck, int xCellIdx, int yCellIdx,
-//                     int cellSize, int cellSize_half);
+
 void EntityVelocitySet(World *world, EntityID entityID, float dx, float dy);
 void EntityVelocityApply(World *world, EntityID entityID, float dt);
-void GameUpdate(World *world, Input *input, float dt);
+void GameUpdate(GameCtx *gameContext, Input *input, float dt);
 
 // Puck CheckForWin(World *world, int puckGridIndex, Puck puckValue);
 

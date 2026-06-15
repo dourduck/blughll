@@ -1,12 +1,30 @@
+#include <stdbool.h>
+
 #include "game.h"
 #include "raylib.h"
 
-// #include "raylib.h"
+#include "cr.h"
 #include "render.h"
-// #include <math.h>
 
-#include <stdbool.h>
+static void execute(Command command, void *context_ptr) {
+  GameCtx *gameCtx = (GameCtx *)context_ptr;
+
+  switch (command.kind) {
+  case CMD_WATER_UPDATE:
+    /* [Destroy Entity here] */
+    break;
+  case CMD_RADS_UPDATE:
+    /* [Load Scene here] */
+    break;
+  case CMD_BOREDOM_UPDATE:
+    break;
+  default:
+    break;
+  }
+}
+
 // #include <string.h>
+// #include <math.h>
 
 // tagged enum
 
@@ -260,102 +278,12 @@ void InputPull(Input *input, Camera2D camera) {
   // input->mouseWorldPositionQuantized.y = y;
 }
 
-void GameUpdate(World *world, Input *input, float dt) {
+void GameUpdate(GameCtx *gameContext, Input *input, float dt) {
   if (input->keyPressed_F) {
     ToggleFullscreen();
+  } else if (input->keyPressed_GRAVE) {
+    gameContext->console = !gameContext->console;
   }
-
-  // else if (input->keyPressed_R) {
-  //   for (int i = 0; i < world->nextID; i++) {
-  //     WorldEntity_Remove(world, i);
-  //     world->puckColumnIndex[i] = 0;
-  //   }
-  //
-  //   world->nextID = 1;
-  //   world->currentPuckIndex = 0;
-  //   world->currentPuckTeam = PUCK_NIL;
-  //
-  //   for (int i = 0; i < 7; i++) {
-  //     world->columnStopPosition[i] = 0;
-  //   }
-  //   world->puckFalling = false;
-  //   world->console = false;
-  //
-  //   for (int i = 0; i < GAME_COLUMN * GAME_ROW; i++) {
-  //     world->grid[i] = PUCK_NIL;
-  //   }
-  //
-  //   world->winner = PUCK_NIL;
-  //
-  //   int stride = 7;
-  //   int lineWidth = 4;
-  //   int cellSize_half = cellSize / 2;
-  //   int puckRadius = cellSize_half - (int)(lineWidth * 1.5);
-  //
-  //   // Cell Creation
-  //   for (int i = 0; i < (stride * stride); i++) {
-  //     EntityID entityID = WorldEntity_Create(world);
-  //
-  //     int x = (i % stride);
-  //     int y = (i / stride);
-  //
-  //     WorldEntity_SetPosition(world, entityID, (x * cellSize), (y *
-  //     cellSize));
-  //
-  //     Traits traits = TRAITS_CELL | TRAITS_POSITIONABLE;
-  //     WorldEntity_TraitsAdd(world, entityID, traits);
-  //   }
-  // }
-
-  // if (world->winner == PUCK_NIL) {
-  //   int x = input->mouseWorldPositionQuantized.x;
-  //   int y = input->mouseWorldPositionQuantized.y;
-  //
-  //   if (input->mouseLeftPressed && !world->puckFalling) {
-  //     if (world->currentPuckTeam == PUCK_NIL) {
-  //       world->currentPuckTeam = PUCK_BLUE;
-  //     } else {
-  //       world->currentPuckTeam =
-  //           world->currentPuckTeam == PUCK_BLUE ? PUCK_RED : PUCK_BLUE;
-  //     }
-  //
-  //     if (x >= 0 && x < (GAME_COLUMN * cellSize) && y >= 0 &&
-  //         y < (GAME_ROW * cellSize)) {
-  //       int column = x / cellSize;
-  //       if (world->columnStopPosition[column] < GAME_ROW) {
-  //         int entityID = CreatePuck(world, world->currentPuckTeam, x, 0,
-  //                                   cellSize, (cellSize / 2));
-  //         EntityVelocitySet(world, entityID, 0, GRAVITY);
-  //
-  //         world->puckColumnIndex[entityID] = column;
-  //         world->puckFalling = true;
-  //         world->currentPuckIndex = entityID;
-  //       }
-  //     }
-  //   }
-
-  //   if (world->puckFalling && world->currentPuckIndex != NIL) {
-  //     EntityVelocityApply(world, world->currentPuckIndex, dt);
-  //
-  //     int column = world->puckColumnIndex[world->currentPuckIndex];
-  //     int stopPosition =
-  //         ((GAME_ROW - world->columnStopPosition[column]) * cellSize) -
-  //         cellSize_half;
-  //
-  //     if (world->y[world->currentPuckIndex] >= stopPosition) {
-  //       world->dy[world->currentPuckIndex] = 0;
-  //       world->y[world->currentPuckIndex] = stopPosition;
-  //       world->columnStopPosition[column]++;
-  //
-  //       int gridIdx = ((stopPosition) / cellSize) * GAME_ROW + column;
-  //       world->grid[gridIdx] = world->currentPuckTeam;
-  //
-  //       world->winner = CheckForWin(world, gridIdx, world->currentPuckTeam);
-  //
-  //       world->puckFalling = false;
-  //     }
-  //   }
-  // }
 }
 
 // EntityID CreatePuck(World *world, Puck puck, int posX, int posY, int
@@ -375,7 +303,17 @@ void GameUpdate(World *world, Input *input, float dt) {
 // }
 
 void GameRun(GameConfig *config) {
+  Ring ring;
+  RingInitialize(&ring);
+
   World world = World_Create();
+
+  GameCtx gameContext = {
+      .world = &world,
+      .water = 100,
+      .rads = 100,
+      .boredom = 0,
+  };
 
   SetConfigFlags(FLAG_FULLSCREEN_MODE);
 
@@ -392,34 +330,14 @@ void GameRun(GameConfig *config) {
 
   Camera2D camera = {.offset = offset, .zoom = 1.0};
   SetTargetFPS(60);
-
   Input input;
-
-  // Cell Creation
-  // for (int i = 0; i < (stride * stride); i++) {
-  //   EntityID entityID = WorldEntity_Create(&world);
-  //
-  //   int x = (i % stride);
-  //   int y = (i / stride);
-  //
-  //   WorldEntity_SetPosition(&world, entityID, (x * cellSize), (y *
-  //   cellSize));
-  //
-  //   Traits traits = TRAITS_CELL | TRAITS_POSITIONABLE;
-  //   WorldEntity_TraitsAdd(&world, entityID, traits);
-  // }
 
   while (!WindowShouldClose()) {
     InputPull(&input, camera);
-
-    if (input.keyPressed_GRAVE == true) {
-      world.console = !world.console;
-    }
-
     float dt = GetFrameTime();
 
-    GameUpdate(&world, &input, dt);
-    RenderUpdate(&world, &input, camera);
+    GameUpdate(&gameContext, &input, dt);
+    RenderUpdate(&gameContext, &input, camera);
   }
 
   CloseWindow();

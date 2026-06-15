@@ -19,7 +19,7 @@
 //                   int puckRadius);
 // void RenderUpdate(World *world, Input *input, Camera2D camera, int cellSize,
 //                   int lineWidth, int puckRadius);
-void RenderUpdate(World *world, Input *input, Camera2D camera);
+void RenderUpdate(GameCtx *gameContext, Input *input, Camera2D camera);
 
 #endif
 /* vim:set ts=3 sw=2 sts=2 et: */

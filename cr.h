@@ -19,7 +19,12 @@ typedef enum {
   CMD_WATER_UPDATE,
   CMD_RADS_UPDATE,
   CMD_BOREDOM_UPDATE,
+  CMD_UPDATE_TEXTURE,
 } CmdKind;
+
+typedef struct {
+  int textureID;
+} Cmd_UpdateTexture;
 
 typedef struct {
   int amount;
@@ -39,6 +44,7 @@ typedef struct {
     Cmd_UpdateWater updateWater;
     Cmd_UpdateRads updateRads;
     Cmd_UpdateBoredom updateBoredom;
+    Cmd_UpdateTexture updateTexture;
   } data;
 } Command;
 

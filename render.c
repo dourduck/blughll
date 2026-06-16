@@ -11,8 +11,8 @@ void Draw_DebugConsole(Input *input) {
   int x = (input->mouseWorldPosition.x);
   int y = (input->mouseWorldPosition.y);
 
-  DrawText(TextFormat("Mouse World Position: (%d, %d)", x, y), 10, 10,
-           24, RAYWHITE);
+  DrawText(TextFormat("Mouse World Position: (%d, %d)", x, y), 10, 10, 24,
+           RAYWHITE);
 }
 /* ^^^ DEBUG CONSLE ^^^ */
 
@@ -23,12 +23,11 @@ void RenderUpdate(GameCtx *gameContext, Input *input, Camera2D camera) {
   BeginMode2D(camera);
 
   int fontSize = 80;
-  int text_x = -camera.offset.x + (int)(fontSize * 0.2);
-  int text_y = -camera.offset.y;
+  int text_x = -camera.offset.x + 20;
+  int text_y = -camera.offset.y + 20;
 
   char buffer_text[32];
-  snprintf(buffer_text, sizeof(buffer_text), "WATER: %d",
-                             gameContext->water);
+  snprintf(buffer_text, sizeof(buffer_text), "WATER: %d", gameContext->water);
   DrawText(buffer_text, text_x, text_y, fontSize, SKYBLUE);
   text_y += (int)(fontSize * 1.5);
 
@@ -37,10 +36,17 @@ void RenderUpdate(GameCtx *gameContext, Input *input, Camera2D camera) {
   text_y += (int)(fontSize * 1.5);
 
   snprintf(buffer_text, sizeof(buffer_text), "BOREDOM: %d",
-                               gameContext->boredom);
+           gameContext->boredom);
   DrawText(buffer_text, text_x, text_y, fontSize, MAROON);
 
+  DrawTexturePro(gameContext->currentSlimeTexture, gameContext->source,
+                 gameContext->destination, gameContext->origin,
+                 gameContext->rotation, gameContext->tint);
+
+  // DrawCircle(0, 0, 8, MAGENTA);
+
   EndMode2D();
+
 
   if (gameContext->console) {
     Draw_DebugConsole(input);

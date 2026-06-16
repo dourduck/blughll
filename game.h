@@ -4,6 +4,7 @@
 #include "raylib.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include "cr.h"
 
 typedef struct {
   const char *gameTitle;
@@ -55,6 +56,18 @@ typedef struct {
   int water;
   int rads;
   int boredom;
+
+  Texture2D currentSlimeTexture;
+  Texture2D slimeTexture_idle;
+  Texture2D slimeTexture_happy;
+  Texture2D slimeTexture_sad;
+
+  Rectangle source;
+  Rectangle destination;
+  float rotation;
+  Vector2 origin;
+  Color tint;
+
   World* world;
   bool console;
 } GameCtx;
@@ -100,7 +113,8 @@ void InputApply(Input input);
 
 void EntityVelocitySet(World *world, EntityID entityID, float dx, float dy);
 void EntityVelocityApply(World *world, EntityID entityID, float dt);
-void GameUpdate(GameCtx *gameContext, Input *input, float dt);
+void GameUpdate(Ring *ring, Input *input, float dt);
+
 
 // Puck CheckForWin(World *world, int puckGridIndex, Puck puckValue);
 

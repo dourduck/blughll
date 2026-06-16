@@ -6,6 +6,13 @@
 #include "cr.h"
 #include "render.h"
 
+typedef enum {
+  TEXTURE_NONE = 0,
+  TEXTURE_SLIME_IDLE = 1,
+  TEXTURE_SLIME_HAPPY = 2,
+  TEXTURE_SLIME_SAD = 3,
+} TextureID;
+
 static void execute(Command command, void *context_ptr) {
   GameCtx *gameCtx = (GameCtx *)context_ptr;
 
@@ -18,190 +25,23 @@ static void execute(Command command, void *context_ptr) {
     break;
   case CMD_BOREDOM_UPDATE:
     break;
+  case CMD_UPDATE_TEXTURE:
+    switch (command.data.updateTexture.textureID) {
+    case TEXTURE_SLIME_IDLE:
+      gameCtx->currentSlimeTexture = gameCtx->slimeTexture_idle;
+      break;
+    case TEXTURE_SLIME_HAPPY:
+      gameCtx->currentSlimeTexture = gameCtx->slimeTexture_happy;
+      break;
+    case TEXTURE_SLIME_SAD:
+      gameCtx->currentSlimeTexture = gameCtx->slimeTexture_sad;
+      break;
+    }
+    break;
   default:
     break;
   }
 }
-
-// #include <string.h>
-// #include <math.h>
-
-// tagged enum
-
-// typedef int PositionX;
-// typedef int PositionY;
-// typedef float VelocityY;
-
-// typedef struct {
-//   Color color;
-//   VelocityY dy;
-//   int radius;
-// } Puck;
-
-// #define GRID_COLS 7
-// #define GRID_ROWS 7
-//
-// typedef struct {
-//   Rectangle cellRectangles[GRID_ROWS][GRID_COLS];
-//   int cellSize;
-//   int lineThickness;
-//   Color color;
-// } Grid;
-//
-// typedef struct {
-//   const char *msg;
-//   int width;
-//   int height;
-//   int paddingX;
-//   int paddingY;
-//   Color textColor;
-//   Color backgroundColor;
-//   int fontSize;
-// } UIMessage;
-//
-// typedef enum { PUCK, GRID, UI_MESSAGE } EntityKind;
-//
-// typedef struct {
-//   EntityKind kind;
-//   PositionX x;
-//   PositionY y;
-//   bool active;
-//
-//   union {
-//     Puck puck;
-//     Grid grid;
-//     UIMessage uiMessage;
-//   };
-// } Entity;
-//
-// #define MAX_ENTITIES 64
-//
-// typedef struct {
-//   Entity slots[MAX_ENTITIES];
-//   int count;
-// } EntityPool;
-//
-// Entity *PoolSpawn(EntityPool *pool, EntityKind kind) {
-//   for (int i = 0; i < MAX_ENTITIES; i++) {
-//     if (!pool->slots[i].active) {
-//       Entity *e = &pool->slots[i];
-//       memset(e, 0, sizeof(Entity)); // not sure exactly how memset works
-//       e->active = true;
-//       e->kind = kind;
-//       if (i >= pool->count) {
-//         pool->count = i + 1;
-//       }
-//       return e;
-//     }
-//   }
-//
-//   return NULL;
-// }
-//
-// void PoolKill(Entity *e) { e->active = false; }
-//
-// void DrawPuck(Puck puck, PositionX x, PositionY y) {
-//   DrawCircle(x, y, puck.radius, puck.color);
-// }
-//
-// void InitializeGrid(Grid *grid, PositionX posX, PositionY posY) {
-//   for (int yi = 0; yi < GRID_ROWS; yi++) {
-//     for (int xi = 0; xi < GRID_COLS; xi++) {
-//       grid->cellRectangles[yi][xi] = (Rectangle){
-//           .x = (xi * grid->cellSize) + posX,
-//           .y = (yi * grid->cellSize) + posY,
-//           .width = grid->cellSize,
-//           .height = grid->cellSize,
-//       };
-//     }
-//   }
-// }
-//
-// void DrawDaGrid(Grid grid) {
-//   for (int y = 0; y < GRID_ROWS; y++) {
-//     for (int x = 0; x < GRID_COLS; x++) {
-//       DrawRectangleLinesEx(grid.cellRectangles[y][x], grid.lineThickness,
-//                            grid.color);
-//     }
-//   }
-// }
-//
-// void DrawUIMessage(UIMessage uiMessage, PositionX posX, PositionY posY) {
-//   int paddingX_half = uiMessage.paddingX / 2;
-//   int paddingY_half = uiMessage.paddingY / 2;
-//
-//   DrawRectangle(posX, posY, uiMessage.width + paddingX_half,
-//                 uiMessage.height + paddingY_half, uiMessage.backgroundColor);
-//
-//   DrawText(uiMessage.msg, posX, posY, uiMessage.fontSize,
-//   uiMessage.textColor);
-// }
-//
-// void PoolDraw(EntityPool *pool) {
-//   for (int i = 0; i < pool->count; i++) {
-//     Entity *e = &pool->slots[i];
-//     if (!e->active) {
-//       continue;
-//     }
-//     switch (e->kind) {
-//     case PUCK:
-//       DrawPuck(e->puck, e->x, e->y);
-//       break;
-//     case GRID:
-//       DrawDaGrid(e->grid);
-//       break;
-//     case UI_MESSAGE:;
-//       DrawUIMessage(e->uiMessage, e->x, e->y);
-//       break;
-//     }
-//   }
-// }
-
-// Puck CheckForWin(World *world, int puckGridIndex, Puck puckValue) {
-//   int deltas[4][2] = {
-//       {-1, 0},  // West -> East
-//       {-1, -1}, // North West -> South East
-//       {0, -1},  // North -> South
-//       {1, -1},  // North East -> South West
-//   };
-//
-//   int stride = GAME_COLUMN;
-//   int puckX = puckGridIndex % stride;
-//   int puckY = puckGridIndex / stride;
-//
-//   for (int i = 0; i < 4; i++) {
-//     int dx = deltas[i][0];
-//     int dy = deltas[i][1];
-//
-//     for (int j = -3; j <= 0; j++) {
-//       int xx = puckX + (dx * j);
-//       int yy = puckY + (dy * j);
-//
-//       int matchCount = 0;
-//
-//       for (int k = 0; k < 4; k++) {
-//         int nx = xx + ((dx)*k);
-//         int ny = yy + ((dy)*k);
-//
-//         if (nx >= 0 && nx < stride && ny >= 0 && ny < GAME_ROW) {
-//
-//           int idx = ny * stride + nx;
-//           int nPuck = world->grid[idx];
-//
-//           if (idx == puckGridIndex || nPuck == puckValue) {
-//             matchCount++;
-//           }
-//         }
-//       }
-//
-//       if (matchCount >= 4) {
-//         return puckValue;
-//       }
-//     }
-//   }
-//
-//   return PUCK_NIL;
-// }
 
 void EntityVelocitySet(World *world, EntityID entityID, float dx, float dy) {
   world->dx[entityID] = dx;
@@ -278,29 +118,25 @@ void InputPull(Input *input, Camera2D camera) {
   // input->mouseWorldPositionQuantized.y = y;
 }
 
-void GameUpdate(GameCtx *gameContext, Input *input, float dt) {
+void GameUpdate(Ring *ring, Input *input, float dt) {
   if (input->keyPressed_F) {
     ToggleFullscreen();
   } else if (input->keyPressed_GRAVE) {
-    gameContext->console = !gameContext->console;
+    // gameContext->console = !gameContext->console;
+  } else if (IsKeyPressed(KEY_ONE)) {
+    Command command = {.kind = CMD_UPDATE_TEXTURE,
+                       .data.updateTexture = {TEXTURE_SLIME_IDLE}};
+    RingCommandPush(ring, command);
+  } else if (IsKeyPressed(KEY_TWO)) {
+    Command command = {.kind = CMD_UPDATE_TEXTURE,
+                       .data.updateTexture = {TEXTURE_SLIME_HAPPY}};
+    RingCommandPush(ring, command);
+  } else if (IsKeyPressed(KEY_THREE)) {
+    Command command = {.kind = CMD_UPDATE_TEXTURE,
+                       .data.updateTexture = {TEXTURE_SLIME_SAD}};
+    RingCommandPush(ring, command);
   }
 }
-
-// EntityID CreatePuck(World *world, Puck puck, int posX, int posY, int
-// cellSize,
-//                     int cellSize_half) {
-//   EntityID entityID = WorldEntity_Create(world);
-//
-//   WorldEntity_SetPosition(world, entityID, posX + cellSize_half,
-//                           posY + cellSize_half);
-//
-//   WorldEntity_SetPuck(world, entityID, puck);
-//
-//   Traits traits = TRAITS_PUCK | TRAITS_POSITIONABLE | TRAITS_PHYSICS;
-//   WorldEntity_TraitsAdd(world, entityID, traits);
-//
-//   return entityID;
-// }
 
 void GameRun(GameConfig *config) {
   Ring ring;
@@ -332,13 +168,45 @@ void GameRun(GameConfig *config) {
   SetTargetFPS(60);
   Input input;
 
+  gameContext.slimeTexture_idle = LoadTexture("./art/blug_idle.png");
+  gameContext.slimeTexture_happy = LoadTexture("./art/blug_happy.png");
+  gameContext.slimeTexture_sad = LoadTexture("./art/blug_sad.png");
+
+  gameContext.currentSlimeTexture = gameContext.slimeTexture_idle;
+
+  gameContext.source = (Rectangle){
+      .x = 0,
+      .y = 0,
+      .width = gameContext.currentSlimeTexture.width,
+      .height = gameContext.currentSlimeTexture.height,
+  };
+
+  gameContext.destination = (Rectangle){
+      .x = -gameContext.currentSlimeTexture.width * 4,
+      .y = -gameContext.currentSlimeTexture.height * 4,
+      .width = gameContext.source.width * 8,
+      .height = gameContext.source.height * 8,
+  };
+
+  gameContext.rotation = 0;
+  gameContext.origin = (Vector2){0, 0};
+  gameContext.tint = WHITE;
+
+  SetTextureFilter(gameContext.currentSlimeTexture, TEXTURE_FILTER_POINT);
+
   while (!WindowShouldClose()) {
     InputPull(&input, camera);
     float dt = GetFrameTime();
 
-    GameUpdate(&gameContext, &input, dt);
+    GameUpdate(&ring, &input, dt);
+    RingFlush(&ring, execute, &gameContext);
+
     RenderUpdate(&gameContext, &input, camera);
   }
+
+  UnloadTexture(gameContext.slimeTexture_idle);
+  UnloadTexture(gameContext.slimeTexture_happy);
+  UnloadTexture(gameContext.slimeTexture_sad);
 
   CloseWindow();
 }

@@ -73,8 +73,9 @@ typedef struct {
 } GameCtx;
 
 typedef struct {
+  Vector2 mousePosition;
   Vector2 mouseWorldPosition;
-  Vector2 mouseWorldPositionQuantized;
+  // Vector2 mouseWorldPositionQuantized;
   bool keyPressed_F;
   bool keyPressed_R;
   bool keyPressed_GRAVE;

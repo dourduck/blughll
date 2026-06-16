@@ -23,6 +23,7 @@ typedef enum {
 } CmdKind;
 
 typedef struct {
+  /* probably should be EntityID */
   int textureID;
 } Cmd_UpdateTexture;
 

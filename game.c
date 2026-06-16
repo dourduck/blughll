@@ -6,6 +6,184 @@
 #include "cr.h"
 #include "render.h"
 
+/* vvv [UI Button] vvv */
+
+typedef struct {
+  int width;
+  int height;
+  int borderWidth;
+  int fontSize;
+
+  Color backgroundColor;
+  Color foregroundColor;
+  Color borderColor;
+} ButtonConfig;
+
+typedef struct {
+  ButtonConfig config;
+
+  Rectangle rect;
+  const char *labelText;
+
+  bool isPressed;
+  bool isHovered;
+
+} Button;
+
+ButtonConfig CreateButtonConfig() {
+  int width = 350;
+  int height = 200;
+  int font_size = 40;
+  int border_width = 4;
+
+  Color col_bground = DARKPURPLE;
+  Color col_fground = LIGHTGRAY;
+  Color col_border = RAYWHITE;
+
+  return (ButtonConfig){
+      .width = width,
+      .height = height,
+      .fontSize = font_size,
+      .borderWidth = border_width,
+      .backgroundColor = col_bground,
+      .foregroundColor = col_fground,
+      .borderColor = col_border,
+  };
+}
+
+Button CreateButton(ButtonConfig config, int pos_x, int pos_y,
+                    const char *label_text) {
+  return (Button){.config = config,
+                  .rect = (Rectangle){.x = pos_x,
+                                      .y = pos_y,
+                                      .width = config.width,
+                                      .height = config.height},
+                  .labelText = label_text,
+                  .isHovered = false,
+                  .isPressed = false};
+}
+
+bool ButtonIsHovered(Button *button, Input *input) {
+  return CheckCollisionPointRec(input->mousePosition, button->rect);
+}
+
+bool ButtonIsPressed(Button *button, Input *input) {
+  return (input->mouseLeftPressed && ButtonIsHovered(button, input));
+}
+
+// typedef enum {
+//   BUTTON_NONE = 0,
+//   BUTTON_WATER = 1,
+//   BUTTON_RADS = 2,
+//   BUTTON_BOREDOM = 3,
+// } ButtonID;
+
+typedef struct {
+  Button btn_water;
+  Button btn_rads;
+  Button btn_boredom;
+} ButtonGroup;
+
+ButtonGroup CreateButtonGroup() {
+  ButtonConfig config_wtr = CreateButtonConfig();
+  ButtonConfig config_rad = CreateButtonConfig();
+  ButtonConfig config_bor = CreateButtonConfig();
+
+  int bx = GetScreenWidth() - (int)(config_wtr.width * 1.5);
+  int by = (int)(config_wtr.height);
+  int padding = config_wtr.borderWidth * 3;
+
+  return (ButtonGroup){
+      .btn_water = CreateButton(config_wtr, bx, by, "WATER"),
+      .btn_rads = CreateButton(config_rad, bx,
+                               by + (config_rad.height + padding), "RADS"),
+      .btn_boredom = CreateButton(
+          config_bor, bx, by + ((config_bor.height + padding) * 2), "BOREDOM"),
+  };
+}
+
+void UIUpdate(Ring *ring, Input *input, ButtonGroup *btn_group) {
+  if (ButtonIsPressed(&btn_group->btn_water, input)) {
+    Command update_water = {
+        .kind = CMD_WATER_UPDATE,
+        .data = {20},
+    };
+
+    RingCommandPush(ring, update_water);
+
+    Command update_tex = {.kind = CMD_UPDATE_TEXTURE};
+    RingCommandPush(ring, update_tex);
+
+  } else if (ButtonIsPressed(&btn_group->btn_rads, input)) {
+    Command update_rads = {
+        .kind = CMD_RADS_UPDATE,
+        .data = {10},
+    };
+
+    RingCommandPush(ring, update_rads);
+
+    Command update_tex = {.kind = CMD_UPDATE_TEXTURE};
+    RingCommandPush(ring, update_tex);
+  } else if (ButtonIsPressed(&btn_group->btn_boredom, input)) {
+    Command update_boredom = {
+        .kind = CMD_BOREDOM_UPDATE,
+        .data = {-20},
+    };
+
+    RingCommandPush(ring, update_boredom);
+
+    Command update_tex = {.kind = CMD_UPDATE_TEXTURE};
+    RingCommandPush(ring, update_tex);
+  }
+
+  if (ButtonIsHovered(&btn_group->btn_water, input)) {
+    btn_group->btn_water.config.borderColor = SKYBLUE;
+  } else {
+    btn_group->btn_water.config.borderColor = RAYWHITE;
+  }
+
+  if (ButtonIsHovered(&btn_group->btn_rads, input)) {
+    btn_group->btn_rads.config.borderColor = LIME;
+  } else {
+    btn_group->btn_rads.config.borderColor = RAYWHITE;
+  }
+
+  if (ButtonIsHovered(&btn_group->btn_boredom, input)) {
+    btn_group->btn_boredom.config.borderColor = MAGENTA;
+  } else {
+    btn_group->btn_boredom.config.borderColor = RAYWHITE;
+  }
+}
+
+void DrawButton(Button *button) {
+  // Background
+  DrawRectangle(button->rect.x, button->rect.y, button->rect.width,
+                button->rect.height, button->config.backgroundColor);
+  // Outline
+  DrawRectangleLinesEx(button->rect, button->config.borderWidth,
+                       button->config.borderColor);
+
+  // Text
+  Vector2 text_size = MeasureTextEx(GetFontDefault(), button->labelText,
+                                    button->config.fontSize, 0);
+
+  int text_x =
+      button->rect.x + (int)(button->config.width / 2) - (int)(text_size.x / 2);
+  int text_y = button->rect.y + (int)(button->config.height / 2) -
+               (int)(text_size.y / 2);
+
+  DrawText(button->labelText, text_x, text_y, button->config.fontSize,
+           button->config.foregroundColor);
+}
+
+void UIRender(ButtonGroup *btn_grp) {
+  DrawButton(&btn_grp->btn_water);
+  DrawButton(&btn_grp->btn_rads);
+  DrawButton(&btn_grp->btn_boredom);
+}
+
+/* ^^^ [UI Button] ^^^ */
+
 typedef enum {
   TEXTURE_NONE = 0,
   TEXTURE_SLIME_IDLE = 1,
@@ -39,17 +217,26 @@ static void execute(Command command, void *context_ptr) {
     }
     break;
   case CMD_UPDATE_TEXTURE:
-    switch (command.data.updateTexture.textureID) {
-    case TEXTURE_SLIME_IDLE:
-      gameCtx->currentSlimeTexture = gameCtx->slimeTexture_idle;
-      break;
-    case TEXTURE_SLIME_HAPPY:
-      gameCtx->currentSlimeTexture = gameCtx->slimeTexture_happy;
-      break;
-    case TEXTURE_SLIME_SAD:
+    if (gameCtx->boredom >= 70 || gameCtx->water <= 30 || gameCtx->rads <= 30) {
       gameCtx->currentSlimeTexture = gameCtx->slimeTexture_sad;
-      break;
+    } else if (gameCtx->boredom <= 20 && gameCtx->water >= 80 &&
+               gameCtx->rads >= 80) {
+      gameCtx->currentSlimeTexture = gameCtx->slimeTexture_happy;
+    } else {
+      gameCtx->currentSlimeTexture = gameCtx->slimeTexture_idle;
     }
+
+    // switch (command.data.updateTexture.textureID) {
+    // case TEXTURE_SLIME_IDLE:
+    //   gameCtx->currentSlimeTexture = gameCtx->slimeTexture_idle;
+    //   break;
+    // case TEXTURE_SLIME_HAPPY:
+    //   gameCtx->currentSlimeTexture = gameCtx->slimeTexture_happy;
+    //   break;
+    // case TEXTURE_SLIME_SAD:
+    //   gameCtx->currentSlimeTexture = gameCtx->slimeTexture_sad;
+    //   break;
+    // }
     break;
   default:
     break;
@@ -116,9 +303,14 @@ void WorldEntity_SetVelocity(World *world, EntityID entityID, float dx,
 }
 
 void InputPull(Input *input, Camera2D camera) {
-  Vector2 mouseWorldPosition = GetScreenToWorld2D(GetMousePosition(), camera);
-  input->mouseWorldPosition.x = mouseWorldPosition.x;
-  input->mouseWorldPosition.y = mouseWorldPosition.y;
+  Vector2 mouse_position = GetMousePosition();
+
+  input->mousePosition.x = mouse_position.x;
+  input->mousePosition.y = mouse_position.y;
+
+  Vector2 mouse_world_position = GetScreenToWorld2D(mouse_position, camera);
+  input->mouseWorldPosition.x = mouse_world_position.x;
+  input->mouseWorldPosition.y = mouse_world_position.y;
 
   input->keyPressed_F = IsKeyPressed(KEY_F);
   input->keyPressed_R = IsKeyPressed(KEY_R);
@@ -131,15 +323,20 @@ void InputPull(Input *input, Camera2D camera) {
   // input->mouseWorldPositionQuantized.y = y;
 }
 
+// TODO:
+/*- Swap slime textures based on slime health status
+ *  Limit status update commands (rads, water, boredom) per tick (~3 or so?)
+ *  Play sound effects per status update command and when slime is sick
+ *  Description text for slime status (Depleted, thirsty, bored, happy, sad,
+ * etc)
+ * */
+
 void GameUpdate(Ring *ring, Input *input, float dt) {
   if (input->keyPressed_F) {
     ToggleFullscreen();
   } else if (input->keyPressed_GRAVE) {
     // gameContext->console = !gameContext->console;
   } else if (IsKeyPressed(KEY_ONE)) {
-    Command command = {.kind = CMD_UPDATE_TEXTURE,
-                       .data.updateTexture = {TEXTURE_SLIME_IDLE}};
-    RingCommandPush(ring, command);
   } else if (IsKeyPressed(KEY_TWO)) {
     Command command = {.kind = CMD_UPDATE_TEXTURE,
                        .data.updateTexture = {TEXTURE_SLIME_HAPPY}};
@@ -172,6 +369,10 @@ void Tick(Ring *ring) {
   };
 
   RingCommandPush(ring, updateBoredom);
+
+  Command command = {.kind = CMD_UPDATE_TEXTURE,
+                     .data.updateTexture = {TEXTURE_SLIME_IDLE}};
+  RingCommandPush(ring, command);
 }
 
 void GameRun(GameConfig *config) {
@@ -233,7 +434,13 @@ void GameRun(GameConfig *config) {
   float timer;
   timer = 0;
   float tickRate;
-  tickRate = 1;
+  tickRate = 5;
+
+  Command command = {.kind = CMD_UPDATE_TEXTURE,
+                     .data.updateTexture = {TEXTURE_SLIME_IDLE}};
+  RingCommandPush(&ring, command);
+
+  ButtonGroup btn_grp = CreateButtonGroup();
 
   while (!WindowShouldClose()) {
     InputPull(&input, camera);
@@ -246,10 +453,12 @@ void GameRun(GameConfig *config) {
       timer = 0;
     }
 
+    UIUpdate(&ring, &input, &btn_grp);
     GameUpdate(&ring, &input, dt);
     RingFlush(&ring, execute, &gameContext);
 
     RenderUpdate(&gameContext, &input, camera);
+    UIRender(&btn_grp);
   }
 
   UnloadTexture(gameContext.slimeTexture_idle);

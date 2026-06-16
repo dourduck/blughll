@@ -18,12 +18,25 @@ static void execute(Command command, void *context_ptr) {
 
   switch (command.kind) {
   case CMD_WATER_UPDATE:
-    /* [Destroy Entity here] */
+    if (gameCtx->water > -(command.data.updateWater.amount)) {
+      gameCtx->water += command.data.updateWater.amount;
+    } else {
+      gameCtx->water = 0;
+    }
     break;
   case CMD_RADS_UPDATE:
-    /* [Load Scene here] */
+    if (gameCtx->rads > -(command.data.updateRads.amount)) {
+      gameCtx->rads += command.data.updateRads.amount;
+    } else {
+      gameCtx->rads = 0;
+    }
     break;
   case CMD_BOREDOM_UPDATE:
+    if (gameCtx->boredom < (100 - command.data.updateBoredom.amount)) {
+      gameCtx->boredom += command.data.updateBoredom.amount;
+    } else {
+      gameCtx->boredom = 100;
+    }
     break;
   case CMD_UPDATE_TEXTURE:
     switch (command.data.updateTexture.textureID) {
@@ -138,6 +151,29 @@ void GameUpdate(Ring *ring, Input *input, float dt) {
   }
 }
 
+void Tick(Ring *ring) {
+  Command updateRads = {
+      .kind = CMD_RADS_UPDATE,
+      .data = {-3},
+  };
+
+  RingCommandPush(ring, updateRads);
+
+  Command updateWater = {
+      .kind = CMD_WATER_UPDATE,
+      .data = {-10},
+  };
+
+  RingCommandPush(ring, updateWater);
+
+  Command updateBoredom = {
+      .kind = CMD_BOREDOM_UPDATE,
+      .data = {5},
+  };
+
+  RingCommandPush(ring, updateBoredom);
+}
+
 void GameRun(GameConfig *config) {
   Ring ring;
   RingInitialize(&ring);
@@ -194,9 +230,21 @@ void GameRun(GameConfig *config) {
 
   SetTextureFilter(gameContext.currentSlimeTexture, TEXTURE_FILTER_POINT);
 
+  float timer;
+  timer = 0;
+  float tickRate;
+  tickRate = 1;
+
   while (!WindowShouldClose()) {
     InputPull(&input, camera);
+
     float dt = GetFrameTime();
+
+    timer += dt;
+    if (timer >= tickRate) {
+      Tick(&ring);
+      timer = 0;
+    }
 
     GameUpdate(&ring, &input, dt);
     RingFlush(&ring, execute, &gameContext);

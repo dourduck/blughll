@@ -1,4 +1,6 @@
 #include <stdbool.h>
+#include <stddef.h>
+// #include <string.h>
 
 #include "game.h"
 #include "raylib.h"
@@ -70,13 +72,6 @@ bool ButtonIsHovered(Button *button, Input *input) {
 bool ButtonIsPressed(Button *button, Input *input) {
   return (input->mouseLeftPressed && ButtonIsHovered(button, input));
 }
-
-// typedef enum {
-//   BUTTON_NONE = 0,
-//   BUTTON_WATER = 1,
-//   BUTTON_RADS = 2,
-//   BUTTON_BOREDOM = 3,
-// } ButtonID;
 
 typedef struct {
   Button btn_water;
@@ -256,7 +251,7 @@ void EntityVelocityApply(World *world, EntityID entityID, float dt) {
 World World_Create() { return (World){.nextID = 1}; }
 
 EntityID WorldEntity_Create(World *world) {
-  if (world->nextID <= MAX_ENTITIES) {
+  if (world->nextID <= ENTITY_MAX) {
     EntityID entityID = world->nextID++;
     world->active[entityID] = true;
     return entityID;
@@ -376,6 +371,7 @@ void Tick(Ring *ring) {
 }
 
 void GameRun(GameConfig *config) {
+
   Ring ring;
   RingInitialize(&ring);
 
@@ -387,6 +383,10 @@ void GameRun(GameConfig *config) {
       .rads = 100,
       .boredom = 0,
   };
+
+  StrWrite(TEXT_BORED, &gameContext.bored);
+  StrWrite(TEXT_HUNGRY, &gameContext.hungry);
+  StrWrite(TEXT_SAD, &gameContext.sad);
 
   SetConfigFlags(FLAG_FULLSCREEN_MODE);
 
